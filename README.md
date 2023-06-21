@@ -1,0 +1,1 @@
+# asset_scheduled_types
