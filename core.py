@@ -30,60 +30,9 @@ twin_code_df = pd.read_excel(twin_codes,'Export')
 active_codes = twin_code_df.loc[twin_code_df['Type Description'].notnull()] 
 active_codes_list = active_codes.loc[:, 'MM Type'].to_list()
 
-print(len(active_codes_list))
-
-'''
-arc_twin_code_df = pd.read_excel(arc_twin_codes,'Export')
-active_codes = arc_twin_code_df.loc[arc_twin_code_df['Type Description'].notnull()] 
-arc_active_codes_list = active_codes.loc[:, 'MM Type'].to_list()
-'''
-
-
 """
- # Generating AUD Twin Code list
-aud_twin_code_df = pd.read_excel(aud_twin_codes,'Export')
-aud_active_codes = aud_twin_code_df.loc[aud_twin_code_df['Type Description'].notnull()] 
-aud_active_codes_list = aud_active_codes.loc[:, 'MM Type'].to_list()
+Processind AMR for defined codes
 """
-
-
-# Active in model function definition
-def active_in_model(twin_code_list, type_code_col, active_in_model_col):
-    if type_code_col in twin_code_list:
-        active_in_model_col = 'Yes'
-    else:
-        active_in_model_col = 'No'
-    return active_in_model_col
-
-# Active in model function definition
-def scheduled_in_amr(amr_code_list, type_code_col, scheduled_in_amr_col):
-    if type_code_col in amr_code_list:
-        scheduled_in_amr_col = 'Yes'
-    else:
-        scheduled_in_amr_col = 'No'
-    return scheduled_in_amr_col
-
-wb = wb = load_workbook(filename=ir_file, read_only=False, keep_vba=False, data_only=True, keep_links=False)
-
-
-for i in range(0, len(ir_sheets)):
-    df = pd.read_excel(ir_file, ir_sheets[i], header=2)
-    try:
-        df['Active in Model'] = df.apply(lambda row: active_in_model(active_codes_list, row['Code (MM_Type)'], row['Active in Model']), axis=1)
-        #print(df.columns)
-    except KeyError:
-        #print(df.columns)
-        df['Active in Model'] = df.apply(lambda row: active_in_model(active_codes_list, row['Asset Type (MM_Type)'], row['Active in Model']), axis=1)
-    
-    df.to_excel(Path(output_path, ir_sheets[i]).with_suffix('.xlsx'), ir_sheets[i])
-    ws = wb[ir_sheets[i]]
-"""     for tbl in ws.tables.values():
-        for row in ws[tbl.ref]:
-            #for cell in row:
-                #print(cell.column)
-            print(tbl.name, tbl.ref) """
-    #print(ws.tables.values())
-
 amr_codes = [] #Define amr code list
 
 data_dir = Path(ir_file).parent # return data directory
@@ -97,7 +46,7 @@ for dir in data_dir.iterdir():
         
         try:
             ws = wb['Validation Tables']
-            amr_codes_table = ws.tables['Equipment_List']
+            amr_codes_table = ws.tables['Type_Aux_Lookup']
             am_cod_ref = amr_codes_table.ref
             pattern = '[0-9]{1,}'
             start_row = int(re.findall(pattern, am_cod_ref)[0])
@@ -106,35 +55,78 @@ for dir in data_dir.iterdir():
             """
             Iterate over excel worksheet using table reference form above
             """
-            for row in ws.iter_rows(min_row=start_row, max_row=end_row, max_col=4):
-                if 'Asset Hive' not in  row[2].value:
-                  amr_codes.append(row[0].value)  
-                #print(row[0].value, row[2].value)
+            for row in ws.iter_rows(min_row=start_row, max_row=end_row, max_col=38):
+                if row[-1].value != 'Dummy':
+                    if len(row[0].value) == 4:
+                        #print(row[0].value[:3])
+                        amr_codes.append(row[0].value[:3])
+                    elif len(row[0].value) > 4:
+                        amr_codes.append(row[0].value[-3:])
+                        #print(row[0].value[-3:])
+
+                #amr_codes.append(row[0].value)  
+                #print(row[0].value, row[-1].value)
             
         except:
             continue       
         #print(dir.name, dir)
 print(len(amr_codes))
 amr_codes = list(dict.fromkeys(amr_codes))
-print(amr_codes.count('AAV'))
-
-""" #Processing HWW Type codes
-hww = pd.read_excel(ir_path, aud_ir_sheetname, header=2)
-hww['Active in Model'] = hww.apply(lambda row: active_in_model(arc_active_codes_list, row['Code (MM_Type)'], row['Active in Model']), axis=1)
-print(hww.columns)
-
-# Processing RSHP Type Codes
-rshp = pd.read_excel(ir_path, rshp_ir_sheetname, header=2) 
-rshp['Active in Model'] = rshp.apply(lambda row: active_in_model(arc_active_codes_list, row['Code (MM_Type)'], row['Active in Model']), axis=1)
-
-# Processing AUD Type Codes
-aud = pd.read_excel(ir_path, aud_ir_sheetname, header=2) 
-aud['Active in Model'] = aud.apply(lambda row: active_in_model(aud_active_codes_list, row['Code (MM_Type)'], row['Active in Model']), axis=1)
+print(amr_codes.count('TPP'))
+print(len(amr_codes))
 
 
 
-# hww['Active in Model'] = hww['Code (MM_Type)'].apply(lambda x: 'Yes' if x in arc_active_codes_list else 'No')
 
-hww.to_excel(hww_out_path, 'output')
-rshp.to_excel(rshp_out_path, 'output')
-aud.to_excel(aud_out_path, 'output') """
+
+# Active in model function definition
+def active_in_model(twin_code_list, type_code_col, active_in_model_col):
+    if type_code_col in twin_code_list:
+        active_in_model_col = 'Yes'
+    else:
+        active_in_model_col = 'No'
+    return active_in_model_col
+
+# Active in AMR function definition
+def scheduled_in_amr(amr_code_list, type_code_col, scheduled_in_amr_col):
+    if type_code_col in amr_code_list:
+        scheduled_in_amr_col = 'Yes'
+    else:
+        scheduled_in_amr_col = 'No'
+    return scheduled_in_amr_col
+
+# LOI Category function definition
+def loi_cat(loi_cat_col, loi2_col, scheduled_in_amr_col):
+    if scheduled_in_amr_col == 'Yes' and loi2_col == 'No':
+        loi_cat_col = 'LOI 0'
+    elif scheduled_in_amr_col == 'No' and loi2_col == 'No':
+        loi_cat_col = 'LOI 1'
+    elif scheduled_in_amr_col == 'Yes' and loi2_col == 'Yes':
+        loi_cat_col = 'LOI 2'
+    elif scheduled_in_amr_col == 'No' and loi2_col == 'Yes':
+        loi_cat_col = 'LOI 3'
+    return loi_cat_col
+
+"""
+IR processing
+"""
+
+for i in range(0, len(ir_sheets)):
+    df = pd.read_excel(ir_file, ir_sheets[i], header=2)
+    try:
+        df['Active in Model'] = df.apply(lambda row: active_in_model(active_codes_list, row['Code (MM_Type)'], row['Active in Model']), axis=1)
+        df['Scheduled in AMR'] = df.apply(lambda row: scheduled_in_amr(amr_codes, row['Code (MM_Type)'], row['Scheduled in AMR']), axis=1)
+        #df['LOI Category'] = df.apply(lambda row: "LOI 0" if row['Scheduled in AMR'] == 'Yes' and row['Asset Tag in Model (LOI 1 and 2)'] == 'No'  else 'LOI 1', axis=1)
+        df['LOI Category'] = df.apply(lambda row: loi_cat(row['LOI Category'], row['Asset Tag in Model (LOI 1 and 2)'], row['Scheduled in AMR']), axis=1)
+
+    except KeyError:
+        #print(df.columns)
+        df['Active in Model'] = df.apply(lambda row: active_in_model(active_codes_list, row['Asset Type (MM_Type)'], row['Active in Model']), axis=1)
+        df['Scheduled in AMR'] = df.apply(lambda row: scheduled_in_amr(amr_codes, row['Asset Type (MM_Type)'], row['Scheduled in AMR']), axis=1)
+        #df['LOI Category'] = df.apply(lambda row: "LOI 0" if row['Scheduled in AMR'] == 'Yes' and row['Asset Tag in Model (LOI 1 and 2)'] == 'No'  else 'LOI 1', axis=1)
+        df['LOI Category'] = df.apply(lambda row: loi_cat(row['LOI Category'], row['Asset Tag in Model (LOI 1 and 2)'], row['Scheduled in AMR']), axis=1)
+    
+    df.to_excel(Path(output_path, ir_sheets[i]).with_suffix('.xlsx'), ir_sheets[i])
+
+
+
