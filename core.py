@@ -15,12 +15,6 @@ output_path = r"C:\Users\SamuelOnuoha\John Holland Group\CYP-Digital Engineering
 
 twin_sheetname = 'Export'
 
-""" mep_ir_sheetname = 'MEP Data Requirement'
-rshp_ir_sheetname = 'RSHP ARC Data Requirement'
-aud_ir_sheetname = 'HWW AUD Data Requirement'
-hww_ir_sheetname = 'HWW ARC Data Requirement'
-
- """
 
 ir_sheets = ['MEP Data Requirement', 'RSHP ARC Data Requirement', 'HWW AUD Data Requirement', 'HWW ARC Data Requirement']
 
@@ -47,6 +41,7 @@ for dir in data_dir.iterdir():
         try:
             ws = wb['Validation Tables']
             amr_codes_table = ws.tables['Type_Aux_Lookup']
+            print(amr_codes_table.tableColumns[0].LocalName)
             am_cod_ref = amr_codes_table.ref
             pattern = '[0-9]{1,}'
             start_row = int(re.findall(pattern, am_cod_ref)[0])
@@ -69,7 +64,7 @@ for dir in data_dir.iterdir():
             
         except:
             continue       
-        #print(dir.name, dir)
+
 print(len(amr_codes))
 amr_codes = list(dict.fromkeys(amr_codes))
 print(amr_codes.count('TPP'))
