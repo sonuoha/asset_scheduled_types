@@ -41,11 +41,13 @@ for dir in data_dir.iterdir():
         try:
             ws = wb['Validation Tables']
             amr_codes_table = ws.tables['Type_Aux_Lookup']
-            print(amr_codes_table.tableColumns[0].LocalName)
             am_cod_ref = amr_codes_table.ref
             pattern = '[0-9]{1,}'
             start_row = int(re.findall(pattern, am_cod_ref)[0])
             end_row = int(re.findall(pattern, am_cod_ref)[1])
+
+            for idx, col in enumerate(amr_codes_table.tableColumns):
+                print(idx, col.name)
 
             """
             Iterate over excel worksheet using table reference form above
